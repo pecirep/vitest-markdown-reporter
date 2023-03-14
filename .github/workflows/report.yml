@@ -1,0 +1,30 @@
+name: report
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  update:
+    name: Update report
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      ISSUE_NUMBER: 1
+    steps:
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 7
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 'lts/*'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm run test:generate-report
+      - run: gh issue edit ${{ env.ISSUE_NUMBER }} --body-file ./test-report.md
+        if: always()
