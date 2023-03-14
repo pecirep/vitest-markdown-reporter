@@ -10,7 +10,7 @@ yarn-error.log*
 
 # testing
 coverage/
-/test-dashboard.md
+/test-report.md
 
 # artifacts
 lib/
