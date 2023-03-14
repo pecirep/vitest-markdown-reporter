@@ -1,26 +1,27 @@
 {
-  "name": "jest-md-dashboard",
-  "version": "0.7.2",
-  "description": "Generating a pretty Markdown dashboard for Jest",
+  "name": "vitest-markdown-reporter",
+  "version": "0.1.0",
+  "description": "Generating a pretty Markdown report for Vitest",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mshrtsr/jest-md-dashboard.git"
+    "url": "git+https://github.com/pecirep/vitest-markdown-reporter.git"
   },
   "bugs": {
-    "url": "https://github.com/mshrtsr/jest-md-dashboard/issues"
+    "url": "https://github.com/pecirep/vitest-markdown-reporter/issues"
   },
-  "homepage": "https://github.com/mshrtsr/jest-md-dashboard#readme",
-  "author": "Masaharu TASHIRO <masatsr.kit@gmail.com>",
+  "homepage": "https://github.com/pecirep/vitest-markdown-reporter#readme",
+  "author": "Tin Pecirep <tin.pecirep@gmail.com>",
   "license": "MIT",
   "keywords": [
-    "jest",
+    "vitest",
     "reporter",
     "markdown"
   ],
   "type": "module",
   "exports": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "engines": {
-    "node": ">=v14.21.1"
+    "node": ">=v16.18.1"
   },
   "scripts": {
     "prebuild": "run-s clean",
@@ -37,30 +38,23 @@
     "clean": "rimraf lib"
   },
   "dependencies": {
+    "@actions/core": "^1.10.0",
+    "@vitest/runner": "^0.29.2",
     "isomorphic-git": "^1.21.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.12",
-    "@babel/preset-env": "^7.20.2",
-    "@babel/preset-typescript": "^7.18.6",
     "@cybozu/eslint-config": "^18.0.0",
-    "@jest/globals": "^29.3.1",
-    "@jest/reporters": "^29.3.1",
-    "@jest/test-result": "^29.3.1",
-    "@jest/types": "^29.3.1",
     "@tsconfig/recommended": "^1.0.1",
-    "@types/jest": "^29.2.5",
     "@typescript-eslint/parser": "^5.48.1",
     "babel-jest": "^29.3.1",
     "eslint": "^8.31.0",
     "eslint-import-resolver-typescript": "^3.5.3",
     "eslint-plugin-import": "^2.27.4",
-    "jest": "^29.3.1",
-    "jest-cli": "^29.3.1",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.8.2",
     "release-please": "^15.1.1",
     "rimraf": "^3.0.2",
-    "typescript": "^4.9.4"
+    "typescript": "^4.9.4",
+    "vitest": "^0.29.2"
   }
 }

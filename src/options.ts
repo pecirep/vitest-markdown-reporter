@@ -1,5 +1,6 @@
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
+import process from "node:process";
 
 import git from "isomorphic-git";
 
@@ -8,21 +9,27 @@ import { Logger } from "./log.js";
 
 import { ReporterOptions } from "./index.js";
 
+interface PotentialVitestConfig {
+  outputFile?: string | Partial<Record<string, string>>;
+}
+
 export const buildTitle = (title?: string): string => {
-  return title ?? "Test Dashboard";
+  return title ?? process.env.VITEST_JUNIT_SUITE_NAME ?? "Test Report";
 };
 
-export const buildOutputPath = (outputPath?: string): string => {
-  return outputPath ?? "test-dashboard.md";
+export const getVitestConfigOutputFile = (config?: PotentialVitestConfig): string | undefined => {
+  if (typeof config?.outputFile === "string") return config.outputFile;
+
+  return config?.outputFile?.markdown;
 };
 
 export const buildPermalinkBaseUrl = async ({
   permalinkBaseUrl,
-  jestRootDir,
+  viteRootDir,
   log,
 }: {
   permalinkBaseUrl?: ReporterOptions["permalinkBaseUrl"];
-  jestRootDir: string;
+  viteRootDir: string;
   log: Logger;
 }): Promise<string | undefined> => {
   if (permalinkBaseUrl) {
@@ -44,14 +51,13 @@ export const buildPermalinkBaseUrl = async ({
     const repository = process.env.GITHUB_REPOSITORY;
     const commit = process.env.GITHUB_SHA;
     const rootDir = process.env.GITHUB_WORKSPACE;
-    const subtree = path.relative(rootDir, jestRootDir);
-    const trailingSlash =
-      subtree.length > 0 && !subtree.endsWith("/") ? "/" : "";
+    const subtree = path.relative(rootDir, viteRootDir);
+    const trailingSlash = subtree.length > 0 && !subtree.endsWith("/") ? "/" : "";
     return `${serverUrl}/${repository}/blob/${commit}/${subtree}${trailingSlash}`;
   }
 
   const rootDir = await git
-    .findRoot({ fs, filepath: jestRootDir })
+    .findRoot({ fs, filepath: viteRootDir })
     .then((dir) => dir)
     .catch(async () => undefined);
   if (rootDir === undefined) {
@@ -66,11 +72,11 @@ export const buildPermalinkBaseUrl = async ({
       return undefined;
     }
     const remote = remotes[0];
+    if (!remote) return undefined;
     const { serverUrl, repository } = parseRemoteUrl(remote.url);
     const commit = await git.resolveRef({ fs, dir: rootDir, ref: "HEAD" });
-    const subtree = path.relative(rootDir, jestRootDir);
-    const trailingSlash =
-      subtree.length > 0 && !subtree.endsWith("/") ? "/" : "";
+    const subtree = path.relative(rootDir, viteRootDir);
+    const trailingSlash = subtree.length > 0 && !subtree.endsWith("/") ? "/" : "";
     return `${serverUrl}/${repository}/blob/${commit}/${subtree}${trailingSlash}`;
   } catch (e) {
     log.error(e);

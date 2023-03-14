@@ -1,4 +1,4 @@
-const name = "jest-md-dashboard";
+const name = "vitest-markdown-reporter";
 export class Logger {
   private readonly silent: boolean;
   constructor(silent: boolean = false) {

@@ -1,81 +1,79 @@
-import * as fs from "fs/promises";
-import path from "path";
+import { accessSync } from "node:fs";
+import { writeFile, mkdir } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
 
-import type { Reporter, ReporterContext } from "@jest/reporters";
-import type { AggregatedResult, TestContext } from "@jest/test-result";
-import type { Config } from "@jest/types";
+import { summary } from "@actions/core";
+import type { Reporter, File, Vitest } from "vitest";
 
-import {
-  convertResultsToDashboard,
-  printDashBoard,
-} from "./dashboard/index.js";
 import { Logger } from "./log.js";
-import {
-  buildTitle,
-  buildPermalinkBaseUrl,
-  buildOutputPath,
-} from "./options.js";
+import { buildPermalinkBaseUrl, buildTitle, getVitestConfigOutputFile } from "./options.js";
+import { convertResultsToReport, printReport } from "./report/index.js";
 
 export type ReporterOptions = {
   title?: string;
   outputPath?: string;
   permalinkBaseUrl?: string;
+  enableGithubActionsSummary?: boolean;
+  flat?: boolean;
 };
 
-export class MarkdownDashboardReporter implements Reporter {
-  private readonly globalConfig: Config.GlobalConfig;
-  private readonly context: ReporterContext;
-  private readonly log: Logger;
-  private readonly title: string;
-  private readonly outputPath: string;
-  private readonly permalinkBaseUrl: Promise<string | undefined>;
+const existsSync = (path: string): boolean => {
+  try {
+    accessSync(path);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
-  constructor(
-    globalConfig: Config.GlobalConfig,
-    reporterOptions: ReporterOptions,
-    reporterContext: ReporterContext
-  ) {
-    this.globalConfig = globalConfig;
-    this.context = reporterContext;
+export class VitestMarkdownReporter implements Reporter {
+  private log: Logger;
+  ctx!: Vitest;
+  private start = 0;
 
-    this.log = new Logger(this.globalConfig.silent);
-
-    this.title = buildTitle(reporterOptions.title);
-    this.outputPath = buildOutputPath(reporterOptions.outputPath);
-    this.permalinkBaseUrl = buildPermalinkBaseUrl({
-      permalinkBaseUrl: reporterOptions.permalinkBaseUrl,
-      jestRootDir: this.globalConfig.rootDir,
-      log: this.log,
-    });
+  constructor(private readonly reporterOptions: ReporterOptions = {}) {
+    this.log = new Logger();
+    this.reporterOptions.enableGithubActionsSummary ??= true;
   }
 
-  onRunStart = () => {
-    // noop
-  };
-  getLastError = () => {
-    // noop
-  };
+  onInit(ctx: Vitest): void {
+    this.ctx = ctx;
+    this.start = Date.now();
+  }
 
-  onRunComplete = async (
-    testContexts: Set<TestContext>,
-    results: AggregatedResult
-  ): Promise<void> => {
-    const permalinkBaseUrl = await this.permalinkBaseUrl;
-    const dashboard = convertResultsToDashboard(results, {
-      title: this.title,
-      jestRootDir: this.globalConfig.rootDir,
-      permalinkBaseUrl,
+  onFinished = async (files: File[] = []): Promise<void> => {
+    const title = buildTitle(this.reporterOptions.title);
+
+    const permalinkBaseUrl = await buildPermalinkBaseUrl({
+      permalinkBaseUrl: this.reporterOptions.permalinkBaseUrl,
+      viteRootDir: this.ctx.config.root,
+      log: this.log,
     });
-    const resultText = printDashBoard(dashboard);
-    if (this.outputPath === "-") {
-      console.log(resultText);
+
+    const flat = this.reporterOptions.flat ?? true;
+
+    const report = convertResultsToReport(files, this.start, title, process.cwd());
+    const reportText = printReport(report, { flat, permalinkBaseUrl });
+
+    const outputPath = this.reporterOptions.outputPath ?? getVitestConfigOutputFile(this.ctx.config);
+
+    if (outputPath) {
+      const reportFile = resolve(this.ctx.config.root, outputPath);
+
+      const outputDirectory = dirname(reportFile);
+      if (!existsSync(outputDirectory)) await mkdir(outputDirectory, { recursive: true });
+
+      await writeFile(reportFile, reportText, "utf-8");
+      this.ctx.logger.log(`Markdown report written to ${reportFile}`);
     } else {
-      const absolutePath = path.resolve(this.outputPath);
-      await fs.mkdir(path.dirname(absolutePath), { recursive: true });
-      await fs.writeFile(absolutePath, resultText);
-      this.log.info(`Dashboard is generated to ${absolutePath}`);
+      this.ctx.logger.log(reportText);
+    }
+
+    if (process.env.GITHUB_ACTIONS && this.reporterOptions.enableGithubActionsSummary) {
+      summary.addRaw(reportText);
+      summary.write();
     }
   };
 }
 
-export default MarkdownDashboardReporter;
+export default VitestMarkdownReporter;
