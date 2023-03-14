@@ -25,7 +25,7 @@
   },
   "scripts": {
     "prebuild": "run-s clean",
-    "build": "tsc --build tsconfig.json --force",
+    "build": "tsup src/index.ts --format esm --dts --out-dir lib",
     "start": "run-s 'build -w'",
     "test": "vitest run --coverage",
     "test:generate-report": "vitest run --config=./vitest.config.report.mts",
@@ -48,7 +48,6 @@
     "@typescript-eslint/parser": "^5.48.1",
     "@vitest/coverage-istanbul": "^0.29.2",
     "@vitest/ui": "^0.29.2",
-    "babel-jest": "^29.3.1",
     "eslint": "^8.31.0",
     "eslint-import-resolver-typescript": "^3.5.3",
     "eslint-plugin-import": "^2.27.4",
@@ -56,6 +55,7 @@
     "prettier": "^2.8.2",
     "release-please": "^15.1.1",
     "rimraf": "^3.0.2",
+    "tsup": "^6.6.3",
     "typescript": "^4.9.4",
     "vite": "^4.1.4",
     "vitest": "^0.29.2"
