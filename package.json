@@ -1,6 +1,6 @@
 {
   "name": "vitest-markdown-reporter",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Generating a pretty Markdown report for Vitest",
   "repository": {
     "type": "git",
