@@ -23,6 +23,13 @@
   "engines": {
     "node": ">=v16.18.1"
   },
+  "files": [
+    "lib",
+    "package.json",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
   "scripts": {
     "prebuild": "run-s clean",
     "build": "tsup src/index.ts --format esm --dts --out-dir lib",
