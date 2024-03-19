@@ -33,7 +33,9 @@ const printTestFiles = (testFiles: TestFile[], options: { flat: boolean; permali
   for (const [index, file] of testFiles.entries()) {
     const state = printState(file.state);
     const headerText = `<a id="file${index}" href="#file${index}">${file.filePath}</a>`;
-    const link = options.permalinkBaseUrl ? ` [[link](${options.permalinkBaseUrl + file.filePath})]` : "";
+    const link = options.permalinkBaseUrl
+      ? ` [[link](${options.permalinkBaseUrl + file.filePath.replaceAll("\\", "/")})]`
+      : "";
     resultText.push(`## ${state} ${headerText}${link}`);
 
     resultText.push(
